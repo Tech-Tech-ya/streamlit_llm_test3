@@ -199,6 +199,27 @@ def recursive_file_check(path, docs_all):
         file_load(path, docs_all)
 
 
+def csv_to_json_and_load(path, docs_all):
+    """
+    CSVファイルをJSON形式に変換して読み込み
+
+    Args:
+        path: CSVファイルのパス
+        docs_all: データソースを格納する用のリスト
+    """
+    import pandas as pd
+    import json
+
+    # CSVファイルを読み込み
+    df = pd.read_csv(path)
+
+    # JSON形式に変換
+    json_data = df.to_json(orient="records", force_ascii=False)
+
+    # JSONデータをドキュメントとして追加
+    docs_all.append(Document(page_content=json_data, metadata={"source": path}))
+
+
 def file_load(path, docs_all):
     """
     ファイル内のデータ読み込み
@@ -211,6 +232,11 @@ def file_load(path, docs_all):
     file_extension = os.path.splitext(path)[1]
     # ファイル名（拡張子を含む）を取得
     file_name = os.path.basename(path)
+
+    # CSVファイルの場合、専用の処理を実行
+    if file_extension == ".csv":
+        csv_to_json_and_load(path, docs_all)
+        return
 
     # 想定していたファイル形式の場合のみ読み込む
     if file_extension in ct.SUPPORTED_EXTENSIONS:
